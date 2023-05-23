@@ -63,6 +63,8 @@ def savePredictionExample(saver: Callable,loader: DataLoader, model: nn.Module, 
 
 
 def plotTrainingStats(data: dict, show: bool = True, savePath: str = None):
+    """Plots a graph with the validation and training data
+    """
     trainLoss = data['traiLossPerEpoch']
     valLoss = data['valLossPerEpoch']
 
