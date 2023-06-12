@@ -26,7 +26,7 @@ def saveCheckpointMetadata(metadata: dict, path: str, fileName: str='checkpointD
     f.close()
 
 
-def loadCheckpoint(path: str, model: nn.Module, optimizer: torch.optim, fileName: str="checkpoint.pth.tar"):
+def loadCheckpoint(path: str, model: nn.Module, optimizer: torch.optim = None, fileName: str="checkpoint.pth.tar"):
     """Loads the saved model.
     * :var:`state` should be a dictionary containing the model state dictionary with the key :str:`state_dict` and the
     optimizer state dictionary with the key :str:`optimizer`.
@@ -34,7 +34,8 @@ def loadCheckpoint(path: str, model: nn.Module, optimizer: torch.optim, fileName
     print("=> Loading checkpoint")
     checkpoint = torch.load(join(path, fileName))
     model.load_state_dict(checkpoint['state_dict'])
-    optimizer.load_state_dict(checkpoint['optimizer'])
+    if optimizer is not None:
+        optimizer.load_state_dict(checkpoint['optimizer'])
 
 def loadCheckpointMetadata(path: str, fileName: str="checkpointData.json") -> dict:
     """Returns a dictionary with the saved metadata.
