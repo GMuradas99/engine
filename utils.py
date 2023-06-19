@@ -1,7 +1,5 @@
-import cv2
 import json
 import torch
-import numpy as np
 import torch.nn as nn
 import matplotlib.pyplot as plt
 
@@ -9,12 +7,13 @@ from os.path import join
 from typing import Callable
 from torch.utils.data import DataLoader
 
-def saveCheckpoint(state: dict, path: str, fileName: str="checkpoint.pth.tar", outputTerminal: bool = True):
+def saveCheckpoint(state: dict, path: str, fileName: str="checkpoint.pth.tar", console: bool = True):
     """Saves the state of the model.
     * :var:`state` should be a dictionary containing the model state dictionary with the key :str:`state_dict` and the
     optimizer state dictionary with the key :str:`optimizer`.
     """
-    if outputTerminal: print("=> Saving checkpoint")
+    if console:
+        print("=> Saving checkpoint")
     torch.save(state, join(path, fileName))
 
 def saveCheckpointMetadata(metadata: dict, path: str, fileName: str='checkpointData.json'):
@@ -26,12 +25,14 @@ def saveCheckpointMetadata(metadata: dict, path: str, fileName: str='checkpointD
     f.close()
 
 
-def loadCheckpoint(path: str, model: nn.Module, optimizer: torch.optim = None, fileName: str="checkpoint.pth.tar"):
+
+def loadCheckpoint(path: str, model: nn.Module, optimizer: torch.optim = None, fileName: str="checkpoint.pth.tar", console: bool = True):
     """Loads the saved model.
     * :var:`state` should be a dictionary containing the model state dictionary with the key :str:`state_dict` and the
     optimizer state dictionary with the key :str:`optimizer`.
     """
-    print("=> Loading checkpoint")
+    if console:
+        print("=> Loading checkpoint")
     checkpoint = torch.load(join(path, fileName))
     model.load_state_dict(checkpoint['state_dict'])
     if optimizer is not None:

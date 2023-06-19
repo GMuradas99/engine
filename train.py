@@ -15,11 +15,15 @@ from .utils import(
     saveCheckpointMetadata,
 )
 
-def trainOneEpoch(loader: DataLoader, model: nn.Module, optimizer: torch.optim, lossFunction: Callable, scaler, device: str) -> float:
+def trainOneEpoch(loader: DataLoader, model: nn.Module, optimizer: torch.optim, lossFunction: Callable, scaler, device: str, 
+                  console: bool = True) -> float:
     """Trains for one epoch and returns the average loss of all instances.
     * :var:`lossFunction` takes the predictions as the first argument and the targets as the second.
     """
-    loop = tqdm(loader)
+    if console:
+        loop = tqdm(loader)
+    else:
+        loop = loader
     avgLoss, counter = 0, 0
     for _, (data, targets) in enumerate(loop):
         data = data.to(device)
@@ -37,7 +41,8 @@ def trainOneEpoch(loader: DataLoader, model: nn.Module, optimizer: torch.optim, 
         scaler.update()
 
         # Update tqdm loop
-        loop.set_postfix(loss=loss.item())
+        if console:
+            loop.set_postfix(loss=loss.item())
 
         # Update loss
         avgLoss += loss.item()
@@ -45,12 +50,15 @@ def trainOneEpoch(loader: DataLoader, model: nn.Module, optimizer: torch.optim, 
 
     return avgLoss/counter
 
-def validate(loader: DataLoader, model: nn.Module, lossFunction: Callable, device: str) -> float:
+def validate(loader: DataLoader, model: nn.Module, lossFunction: Callable, device: str, console: bool = True) -> float:
     """Returns the validation loss.
     * :var:`lossFunction` takes the predictions as the first argument and the targets as the second.
     """
-    print("Validating...")
-    loop = tqdm(loader)
+    if console:
+        print("Validating...")
+        loop = tqdm(loader)
+    else:
+        loop = loader
     model.eval()
     avgLoss, counter = 0, 0
     with torch.no_grad():
@@ -63,7 +71,8 @@ def validate(loader: DataLoader, model: nn.Module, lossFunction: Callable, devic
             loss = lossFunction(predictions,targets)
 
             # Update tqdm loop
-            loop.set_postfix(loss=loss.item())
+            if console:
+                loop.set_postfix(loss=loss.item())
 
             # Update loss
             avgLoss += loss.item()
@@ -72,7 +81,8 @@ def validate(loader: DataLoader, model: nn.Module, lossFunction: Callable, devic
 
 def train(trainLoader: DataLoader, validationLoader: DataLoader, model: nn.Module, epochs: int,
           optimizer: torch.optim, lossFunction: Callable, scaler, device: str, loadLastCheckpoint: bool = False,
-          checkpointPath: str = 'checkpoint', exampleSaverFunction: Callable = None, exampleSavingPath: str = 'examples'):
+          checkpointPath: str = 'checkpoint', exampleSaverFunction: Callable = None, exampleSavingPath: str = 'examples',
+          console: bool = True):
     """Trains the model for the selected amount of epochs.
     * boolean :var:`loadLastCheckpoint` indicates if the model is to be trained from scratch or continue training.
     """
@@ -99,14 +109,15 @@ def train(trainLoader: DataLoader, validationLoader: DataLoader, model: nn.Modul
 
     # Main loop
     for epoch in range(lastEpoch, epochs):
-        print(f'------   EPOCH {epoch+1}   ------')
+        if console:
+            print(f'------   EPOCH {epoch+1}   ------')
 
         # Training one epoch
-        trainLoss = trainOneEpoch(trainLoader, model, optimizer, lossFunction, scaler, device)
+        trainLoss = trainOneEpoch(trainLoader, model, optimizer, lossFunction, scaler, device, console=console)
         traiLossPerEpoch.append(trainLoss)
 
         # Validating
-        valLoss = validate(validationLoader, model, lossFunction, device)
+        valLoss = validate(validationLoader, model, lossFunction, device, console=console)
         valLossPerEpoch.append(valLoss)
 
         # Saving Checkpoint
@@ -114,7 +125,7 @@ def train(trainLoader: DataLoader, validationLoader: DataLoader, model: nn.Modul
             'state_dict': model.state_dict(),
             'optimizer': optimizer.state_dict()
         }
-        saveCheckpoint(checkpoint, checkpointPath)
+        saveCheckpoint(checkpoint, checkpointPath, console=console)
         lastEpoch = epoch+1
         checkpointData = {
             'lastEpoch': lastEpoch,
@@ -129,4 +140,5 @@ def train(trainLoader: DataLoader, validationLoader: DataLoader, model: nn.Modul
                 os.mkdir(join(exampleSavingPath, f'epoch_{epoch+1}'))
             savePredictionExample(exampleSaverFunction, validationLoader, model, join(exampleSavingPath, f'epoch_{epoch+1}', 'example.png'), device)
 
-    print("Training complete.")
+    if console:
+        print("Training complete.")
