@@ -27,7 +27,8 @@ def trainOneEpoch(loader: DataLoader, model: nn.Module, optimizer: torch.optim, 
     avgLoss, counter = 0, 0
     for _, (data, targets) in enumerate(loop):
         data = data.to(device)
-        targets = targets.float().unsqueeze(1).to(device=device)
+        targets = targets.float().unsqueeze(1).to(device=device)      # THIS WORKED WITH BINARY SEGMENTATION, TRYING SOMETHING NEWS
+        # targets = targets.float().to(device=device)
 
         # Forward
         with torch.cuda.amp.autocast():
@@ -64,7 +65,9 @@ def validate(loader: DataLoader, model: nn.Module, lossFunction: Callable, devic
     with torch.no_grad():
         for _, (data, targets) in enumerate(loop):
             data = data.to(device)
-            targets = targets.float().unsqueeze(1).to(device=device)
+            targets = targets.float().unsqueeze(1).to(device=device)      # THIS WORKED WITH BINARY SEGMENTATION, TRYING SOMETHING NEW
+            # targets = targets.float().to(device=device)
+
 
             # Predicting
             predictions = model(data)
